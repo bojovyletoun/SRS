@@ -89,8 +89,8 @@ class GroupsGridControl extends Control
         ->setSortable()
         ->setSortableCallback(static function (QueryBuilder $qb, array $sort): void {
             $sortRev = $sort['variableSymbolText'] === 'DESC' ? 'ASC' : 'DESC';
-            $qb->join('p.variableSymbol', 'VS')
-                ->orderBy('VS.variableSymbol', $sortRev);
+            $qb->join('p.variableSymbol', 'VSs')
+                ->orderBy('VSs.variableSymbol', $sortRev);
         })
         ->setFilterText()
         ->setCondition(static function (QueryBuilder $qb, string $value): void {
@@ -100,9 +100,21 @@ class GroupsGridControl extends Control
                 ->setParameter(':variableSymbol', '%' . $value . '%');
         });
 
-           $grid->addColumnLink('leader', 'Vedoucí', ':detail', 'leader.displayName', ['id' => 'leader.id'])->setSortable()
+           $grid->addColumnLink('leader', 'Vedoucí', ':detail', 'leader.displayName', ['id' => 'leader.id'])
+        ->setSortable()
+        ->setSortableCallback(static function (QueryBuilder $qb, array $sort): void {
+            $sortRev = $sort['leader.displayName'] === 'DESC' ? 'ASC' : 'DESC';
+            $qb->join('p.leader', 'L')
+                ->orderBy('L.displayName', $sortRev);
+        })
+
 //                return Html::el('a')->setAttribute('href', $this->getPresenter()->link('detail', $leader->getId()))->setText($leader->getDisplayName());
-            ->setFilterText();
+            ->setFilterText()
+        ->setCondition(static function (QueryBuilder $qb, string $value): void {
+            $qb->join('p.leader', 'q')
+                ->andWhere('q.displayName LIKE :text')
+                ->setParameter(':text', '%' . $value . '%');
+        });
 
         $grid->addColumnDateTime('applicationDate', 'Datum založení')
             ->setRenderer(static function (Troop $p) {
